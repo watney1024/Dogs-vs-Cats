@@ -422,6 +422,7 @@ int forward(Mat & input, int i)
     all_time[i] += linear2_time[i];
     printf("conv1: %.3lf, relu1: %.3lf, mp1: %.3lf\nconv2: %.3lf, relu2: %.3lf, mp2: %.3lf\nconv3: %.3lf, relu3: %.3lf, mp3: %.3lf\nflatten1: %.3lf, linear1: %.3lf, relu4: %.3lf, linear2: %.3lf\n", conv1_time[i], relu1_time[i], mp1_time[i], conv2_time[i], relu2_time[i], mp2_time[i], conv3_time[i], relu3_time[i], mp3_time[i], flatten1_time[i], linear1_time[i], relu4_time[i], linear2_time[i]);
     //std::cout << linear2_output[0] << std::endl;//sigmoid之后会比较接近，所以可以先看sigmoid之前的数据
+    printf("all time:%.3lf\n", all_time[i]);
     ans = sigmoid(linear2_output[0]);
     printf("predict output:%f\n\n", ans);
     return 0;
@@ -445,11 +446,6 @@ int main()
     for(int i = 0;i<250;++i)
     {
         forward(mats[i], i);
-    }
-
-    for (int i = 0; i < 250; ++i)
-    {
-        std::cout <<all_time[i] << std::endl;
     }
     double avgConv1Time = calculateAverage(conv1_time, 50,250);
     double avgRelu1Time = calculateAverage(relu1_time, 50,250);
