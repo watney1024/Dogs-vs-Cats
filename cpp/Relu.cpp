@@ -11,13 +11,13 @@ public:
     int height;
     int width;
 
-    // ¹¹Ôìº¯Êı
+    // æ„é€ å‡½æ•°
     Mat(int d, int c, int h, int w) : dim(d), channel(c), height(h), width(w)
     {
         tensor.resize(d * c * h * w);
     }
 
-    // ÖØÔØ operator[] ÒÔ·ÃÎÊÔªËØ
+    // é‡è½½ operator[] ä»¥è®¿é—®å…ƒç´ 
     float& operator[](size_t index);
     const float& operator[](size_t index) const;
 };
@@ -40,7 +40,7 @@ std::vector<int> dilation;
 void pretensor(std::vector<float>& one_dim, std::vector<std::vector<std::vector<std::vector<float>>>>& four_dim,
     const Mat& mp1_input)
 {
-    // ³õÊ¼»¯ four_dim Îª (1, 32, 148, 148)
+    // åˆå§‹åŒ– four_dim ä¸º (1, 32, 148, 148)
     four_dim.resize(1);
     for (int i = 0; i < mp1_input.channel; ++i)
     {
@@ -51,10 +51,10 @@ void pretensor(std::vector<float>& one_dim, std::vector<std::vector<std::vector<
             for (int k = 0; k < mp1_input.width; ++k)
             {
                 four_dim[0][i][j].resize(mp1_input.width);
-                // ¼ÆËãË÷ÒıºÍÖµ
+                // è®¡ç®—ç´¢å¼•å’Œå€¼
                 int index = i * mp1_input.height * mp1_input.width + j * mp1_input.width + k;
                 float value = std::sin(static_cast<float>(index));
-                // Ìî³ä one_dim ºÍ four_dim
+                // å¡«å…… one_dim å’Œ four_dim
                 one_dim[index] = value;
                 four_dim[0][i][j][k] = value;
             }
