@@ -39,7 +39,7 @@ torch.manual_seed(3407)
 if device == 'cuda':
     torch.cuda.manual_seed_all(3407)
 
-########
+##############
 class Bilinear(nn.Module):
     def __init__(self, input_shape):
         super(Bilinear, self).__init__()
