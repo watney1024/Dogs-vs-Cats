@@ -5,7 +5,7 @@
       <paths name="watney1024@222.204.244.206:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/watney1024/dl/mgdz" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/watney1024/dl/Dogs-vs-Cats" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

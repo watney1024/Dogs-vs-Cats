@@ -39,7 +39,7 @@ torch.manual_seed(3407)
 if device == 'cuda':
     torch.cuda.manual_seed_all(3407)
 
-##############
+
 class Bilinear(nn.Module):
     def __init__(self, input_shape):
         super(Bilinear, self).__init__()
@@ -200,7 +200,7 @@ for i in range(5):
     loss_val = []
     acc_val = []
 
-    epoch = 80
+    epoch = 1
     min_acc = 0
     best_epoch = 0
     for t in range(epoch):
