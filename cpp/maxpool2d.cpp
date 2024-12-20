@@ -12,13 +12,13 @@ public:
     int height;
     int width;
 
-    // ¹¹Ôìº¯Êı
+    // æ„é€ å‡½æ•°
     Mat(int d, int c, int h, int w) : dim(d), channel(c), height(h), width(w)
     {
         tensor.resize(d * c * h * w);
     }
 
-    // ÖØÔØ operator[] ÒÔ·ÃÎÊÔªËØ
+    // é‡è½½ operator[] ä»¥è®¿é—®å…ƒç´ 
     float& operator[](size_t index);
     const float& operator[](size_t index) const;
 };
@@ -38,11 +38,11 @@ std::vector<int> kernel_size;
 std::vector<int> stride;
 std::vector<int> dilation;
 
-//ÓÃsinÉú³É²âÊÔÊı¾İ
+//ç”¨sinç”Ÿæˆæµ‹è¯•æ•°æ®
 void pretensor(std::vector<float>& one_dim, std::vector<std::vector<std::vector<std::vector<float>>>>& four_dim,
     const Mat& mp1_input)
 {
-    // ³õÊ¼»¯ four_dim Îª (1, 32, 148, 148)
+    // åˆå§‹åŒ– four_dim ä¸º (1, 32, 148, 148)
     four_dim.resize(1);
     for (int i = 0; i < mp1_input.channel; ++i)
     {
@@ -53,10 +53,10 @@ void pretensor(std::vector<float>& one_dim, std::vector<std::vector<std::vector<
             for (int k = 0; k < mp1_input.width; ++k)
             {
                 four_dim[0][i][j].resize(mp1_input.width);
-                // ¼ÆËãË÷ÒıºÍÖµ
+                // è®¡ç®—ç´¢å¼•å’Œå€¼
                 int index = i * mp1_input.height * mp1_input.width + j * mp1_input.width + k;
                 float value = std::sin(static_cast<float>(index));
-                // Ìî³ä one_dim ºÍ four_dim
+                // å¡«å…… one_dim å’Œ four_dim
                 one_dim[index] = value;
                 four_dim[0][i][j][k] = value;
             }
@@ -102,8 +102,8 @@ int forward(const Mat& input, Mat& output)
     {
         for (int c = 0; c < input.channel; ++c)
         {
-            //¶ÔÃ¿Ò»¸öÅú´ÎµÄÃ¿Ò»¸öÍ¨µÀ×ömp2d
-            for (int h = 0; h < input_h; h += stride[1]) // µÚÒ»¸ö
+            //å¯¹æ¯ä¸€ä¸ªæ‰¹æ¬¡çš„æ¯ä¸€ä¸ªé€šé“åšmp2d
+            for (int h = 0; h < input_h; h += stride[1]) // ç¬¬ä¸€ä¸ª
             {
                 //std::cout << (h + stride[1]) << std::endl;
                 if ((h + stride[1]) > input_h) continue;
@@ -208,7 +208,7 @@ std::vector<float> mp_input_data = \
 0.0239, 0.0835, 0.6143, 0.0222, 0.7029, 0.3813, 0.3447, 0.4178,
 0.1323, 0.3780, 0.7844, 0.0424};
 
-//ÕıÈ·µÄoutput
+//æ­£ç¡®çš„output
 std::vector<std::vector<std::vector<float>>> mp_data2 = \
 {{{0.9388, 0.9126, 0.9274, 0.9468, 0.6510, 0.7645},
     { 0.9998, 0.7675, 0.4690, 0.3708, 0.8612, 0.9578 },
@@ -244,7 +244,7 @@ int main()
 
     pretensor(mp1_input.tensor, four_dim, mp1_input);
     int i = 1;
-    forward(mp1_input, mp1_output);//ÓÃsinÉú³ÉµÄÊı¾İ²âÊÔ
+    forward(mp1_input, mp1_output);//ç”¨sinç”Ÿæˆçš„æ•°æ®æµ‹è¯•
     //printMat(mp1_input);
     printMat(mp1_output);
 
@@ -254,7 +254,7 @@ int main()
     {
         mp_input[i] = mp_input_data[i];
     }
-    forward(mp_input, mp_output);//¸ø³öµÄÊı¾İ²âÊÔ
+    forward(mp_input, mp_output);//ç»™å‡ºçš„æ•°æ®æµ‹è¯•
     printMat(mp_output);
     */
 
