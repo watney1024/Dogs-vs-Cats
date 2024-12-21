@@ -5,6 +5,7 @@ import time
 
 import matplotlib.pyplot as plt
 import torch
+from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
@@ -21,14 +22,8 @@ parser = argparse.ArgumentParser(description='Training script with variable batc
 parser.add_argument('--batch_size', type=int, default=16, help='Batch size for training and validation')
 parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate for the optimizer')
 parser.add_argument('--epochs', type=int, default=1, help='Number of epochs to train')
-parser.add_argument('--input_shape', type=tuple, default=(3, 150, 150), help='Size of picture')
-parser.add_argument('--model', type=str, default='Cnn', help='Type of model')
+# parser.add_argument(('--model',type=))
 args = parser.parse_args()
-
-# 将命令行参数记录到日志
-logging.info("Command line arguments:")
-for arg_name in vars(args):
-    logging.info(f"{arg_name}: {getattr(args, arg_name)}")
 
 # 训练集目录
 TRAIN_DIRS = ['./dataset_torch/train1', './dataset_torch/train2', './dataset_torch/train3', './dataset_torch/train4',
@@ -39,15 +34,15 @@ VAL_DIRS = ['./dataset_torch/val1', './dataset_torch/val2', './dataset_torch/val
 
 # 定义归一化转换，将像素值归一化到 [-1, 1] 之间
 normalize = transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
-input_shape = args.input_shape
+input_shape = (3, 150, 150)
 train_transform = transforms.Compose([
-    transforms.Resize((input_shape[1], input_shape[2])),
+    transforms.Resize((150, 150)),
     transforms.ToTensor(),
     normalize  # 应用归一化
 ])
 
 val_transform = transforms.Compose([
-    transforms.Resize((input_shape[1], input_shape[2])),
+    transforms.Resize((150, 150)),
     transforms.ToTensor(),
     normalize  # 应用归一化
 ])
@@ -56,6 +51,54 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.manual_seed(3407)
 if device == 'cuda':
     torch.cuda.manual_seed_all(3407)
+
+
+class Bilinear(nn.Module):
+    def __init__(self, input_shape):
+        super(Bilinear, self).__init__()
+        self.input_shape = input_shape
+
+        self.features = nn.Sequential(
+            # First Convolutional Block
+            nn.Conv2d(in_channels=input_shape[0], out_channels=32, kernel_size=5, stride=1, padding=2),
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=5, stride=1, padding=2),
+            nn.BatchNorm2d(32),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            # Second Convolutional Block
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=5, stride=1, padding=2),
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5, stride=1, padding=2),
+            nn.BatchNorm2d(64),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            # Third Convolutional Block
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(128),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            # Fourth Convolutional Block
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(128),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            # Average Pooling
+            nn.AvgPool2d(kernel_size=2, stride=2),
+        )
+
+        self.classifiers = nn.Sequential(
+            nn.Linear(128 ** 2, 1),
+        )
+
+    def forward(self, x):
+        x = self.features(x)
+        batch_size = x.size(0)
+
+        x = x.view(batch_size, 128, 4 ** 2)
+
+        x = (torch.bmm(x, torch.transpose(x, 1, 2)) / 4 ** 2).view(batch_size, -1)
+
+        x = torch.nn.functional.normalize(torch.sign(x) * torch.sqrt(torch.abs(x) + 1e-10))
+
+        x = torch.sigmoid(self.classifiers(x))
+        return x.squeeze(1)
 
 
 # 定义训练函数
@@ -124,7 +167,7 @@ def matplot_acc(train_acc, val_acc):
     plt.ylim(bottom=0)  # 设置y轴的最小值为0
     plt.xlim(left=0)  # 设置x轴的最小值为0，如果epoch从1开始，可以去掉这行
     plt.title("acc ")
-    plt.show()  ########保存图片
+    plt.show()
 
 
 # 开始训练
@@ -140,25 +183,23 @@ avg_acc_val = 0
 
 for i in range(5):
     logging.info(f"Fold {i + i}\n")
-    # model_name = args.model
-    # if()
-    # model = Bilinear().to(device)
-    # loss_fn = nn.BCELoss()
-    # optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    model = Bilinear(input_shape).to(device)
+    loss_fn = nn.BCELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
     ROOT_TRAIN = TRAIN_DIRS[i]
     ROOT_TEST = VAL_DIRS[i]
     train_dataset = ImageFolder(ROOT_TRAIN, transform=train_transform)
     val_dataset = ImageFolder(ROOT_TEST, transform=val_transform)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=6)
-    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=6)
+    train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=0)
+    val_dataloader = DataLoader(val_dataset, batch_size=16, shuffle=True, num_workers=0)
     loss_train = []
     acc_train = []
     loss_val = []
     acc_val = []
 
-    epoch = args.epochs
+    epoch = 1
     min_acc = 0
     best_epoch = 0
     for t in range(epoch):
