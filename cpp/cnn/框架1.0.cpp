@@ -5,6 +5,8 @@
 #include <chrono>
 #include <time.h> 
 #include <random>
+#include <cstring>
+
 double get_current_time()
 {
     auto now = std::chrono::high_resolution_clock::now();
@@ -446,6 +448,8 @@ double calculateAverage(const double* array, int begin, int end) {
 
 int main()
 {
+    std::cout<<"bianyihou";
+    return 0;
     preread();
     //pretensor(conv1_input); 
     get_mat(250);
