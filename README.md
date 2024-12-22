@@ -21,3 +21,10 @@
 ## 2024年12月21日
 
 提交了auto_training的代码,可以通过.sh脚本实现自动训练，并且把数据保存为log文件
+
+## 2024年12月22日
+
+把auto_taining改完了，只要运行suto.sh脚本就可以自动运行，使用步骤如下
+conda activate pytorch #激活虚拟环境
+chmod +x auto.sh
+./auto.sh & #执行sh脚本，可以在这个里面修改参数
