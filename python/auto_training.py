@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import argparse
 import logging
 import os
@@ -24,7 +25,7 @@ parser = argparse.ArgumentParser(description='Training script with variable batc
 parser.add_argument('--batch_size', type=int, default=16, help='Batch size for training and validation')
 parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate for the optimizer')
 parser.add_argument('--epochs', type=int, default=1, help='Number of epochs to train')
-parser.add_argument('--input_shape', type=tuple, default=(3, 150, 150), help='Size of picture')
+parser.add_argument('--input_shape', type=int, default=150, help='Size of picture')
 parser.add_argument('--model', type=str, default='Cnn', help='Type of model')
 args = parser.parse_args()
 
@@ -43,6 +44,11 @@ model_dict = {
     'Dnn_150': Dnn_150,
     'Bilinear_150': Bilinear_150
 }
+model_name = args.model
+batch_size = args.batch_size
+epochs = args.epochs
+input_shape = args.input_shape
+lr = args.lr
 
 # 训练集目录
 TRAIN_DIRS = ['./dataset_torch/train1', './dataset_torch/train2', './dataset_torch/train3', './dataset_torch/train4',
@@ -53,15 +59,15 @@ VAL_DIRS = ['./dataset_torch/val1', './dataset_torch/val2', './dataset_torch/val
 
 # 定义归一化转换，将像素值归一化到 [-1, 1] 之间
 normalize = transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
-input_shape = args.input_shape
+
 train_transform = transforms.Compose([
-    transforms.Resize((input_shape[1], input_shape[2])),
+    transforms.Resize((input_shape, input_shape)),
     transforms.ToTensor(),
     normalize  # 应用归一化
 ])
 
 val_transform = transforms.Compose([
-    transforms.Resize((input_shape[1], input_shape[2])),
+    transforms.Resize((input_shape, input_shape)),
     transforms.ToTensor(),
     normalize  # 应用归一化
 ])
@@ -117,7 +123,7 @@ def val(dataloader, model, loss_fn):
 
 
 # 定义画图函数
-def matplot_loss(train_loss, val_loss, model_name, batch_size, epochs, input_shape):
+def matplot_loss(train_loss, val_loss, fold_number):
     plt.plot(train_loss, label='train_loss')
     plt.plot(val_loss, label='val_loss')
     plt.legend(loc='best')
@@ -126,12 +132,12 @@ def matplot_loss(train_loss, val_loss, model_name, batch_size, epochs, input_sha
     plt.ylim(bottom=0)  # 设置y轴的最小值为0
     plt.xlim(left=0)  # 设置x轴的最小值为0，如果epoch从1开始，可以去掉这行
     plt.title("loss")
-    file_name = f"{model_name}_batch_{batch_size}_epochs_{epochs}_input_{input_shape[1]}x{input_shape[2]}_loss.png"
+    file_name = f"{model_name}_fold_{fold_number + 1}_batch_{batch_size}_epochs_{epochs}_input_{input_shape}_loss.png"
     plt.savefig(file_name)
     plt.show()
 
 
-def matplot_acc(train_acc, val_acc, model_name, batch_size, epochs, input_shape):
+def matplot_acc(train_acc, val_acc, fold_number):
     plt.plot(train_acc, label='train_acc')
     plt.plot(val_acc, label='val_acc')
     plt.legend(loc='best')
@@ -140,7 +146,7 @@ def matplot_acc(train_acc, val_acc, model_name, batch_size, epochs, input_shape)
     plt.ylim(bottom=0)  # 设置y轴的最小值为0
     plt.xlim(left=0)  # 设置x轴的最小值为0，如果epoch从1开始，可以去掉这行
     plt.title("acc ")
-    file_name = f"{model_name}_batch_{batch_size}_epochs_{epochs}_input_{input_shape[1]}x{input_shape[2]}_acc.png"
+    file_name = f"{model_name}_fold_{fold_number + 1}_batch_{batch_size}_epochs_{epochs}_input_{input_shape}_acc.png"
     plt.savefig(file_name)
     plt.show()
 
@@ -157,25 +163,24 @@ avg_loss_val = 0
 avg_acc_val = 0
 
 for i in range(5):
-    logging.info(f"Fold {i + i}\n")
-    model_name = args.model
-    model = model_dict[args.model]().to(device)
+    logging.info(f"Fold {i + 1}\n")
+    model = model_dict[model_name]().to(device)
     loss_fn = nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     ROOT_TRAIN = TRAIN_DIRS[i]
     ROOT_TEST = VAL_DIRS[i]
     train_dataset = ImageFolder(ROOT_TRAIN, transform=train_transform)
     val_dataset = ImageFolder(ROOT_TEST, transform=val_transform)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=6)
-    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=6)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=6)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, num_workers=6)
     loss_train = []
     acc_train = []
     loss_val = []
     acc_val = []
 
-    epoch = args.epochs
+    epoch = epochs
     min_acc = 0
     best_epoch = 0
     for t in range(epoch):
@@ -201,7 +206,7 @@ for i in range(5):
 
             min_acc = val_acc
             best_epoch = t
-            file_name = f"{model_name}_batch_{args.batch_size}_epochs_{args.epochs}_input_{args.input_shape[1]}x{args.input_shape[2]}_best.pth"
+            file_name = f"{model_name}_batch_{args.batch_size}_epochs_{args.epochs}_input_{args.input_shape}best.pth"
             torch.save(model.state_dict(), os.path.join(folder, file_name))
         # 保存最后一轮的权重文件
         # if t == epoch - 1:
@@ -217,10 +222,10 @@ for i in range(5):
     avg_acc_train += all_acc_train[i]
     avg_loss_train += all_loss_train[i]
 
-    matplot_loss(loss_train, loss_val)
-    matplot_acc(acc_train, acc_val)
+    matplot_loss(loss_train, loss_val, i)
+    matplot_acc(acc_train, acc_val, i)
 
 logging.info("")
 logging.info('avg_train_loss: {:.4f}     avg_train_acc: {:.4f}'.format(avg_loss_train / 5, avg_acc_train / 5))
 logging.info('avg_val_loss: {:.4f}     avg_val_acc: {:.4f}'.format(avg_loss_val / 5, avg_acc_val / 5))
-logging.info('Done!')
+logging.info('Done!\n')

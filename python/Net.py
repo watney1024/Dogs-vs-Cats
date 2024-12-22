@@ -28,13 +28,14 @@ class Cnn_250(nn.Module):
         self.fc1 = nn.Linear(16 * 58 * 58, 128)
         self.dropout = nn.Dropout(0.5)
         self.fc2 = nn.Linear(128, 1)
+        self.relu = nn.ReLU()
 
     def forward(self, x):
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.flatten(x)
-        x = F.relu(self.fc1(x))
+        x = self.relu(self.fc1(x))
         x = self.dropout(x)
         x = torch.sigmoid(self.fc2(x))
         return x.squeeze(1)
