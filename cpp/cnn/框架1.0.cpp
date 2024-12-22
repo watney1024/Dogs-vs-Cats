@@ -448,8 +448,6 @@ double calculateAverage(const double* array, int begin, int end) {
 
 int main()
 {
-    std::cout<<"bianyihou";
-    return 0;
     preread();
     //pretensor(conv1_input); 
     get_mat(250);
