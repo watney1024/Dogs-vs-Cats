@@ -1,4 +1,4 @@
-﻿#include <cmath>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -6,6 +6,7 @@
 #include <time.h> 
 #include <random>
 #include <cstring>
+#include <vector>
 double get_current_time()
 {
     auto now = std::chrono::high_resolution_clock::now();
@@ -18,7 +19,7 @@ double get_current_time()
 #define PATH_SEPARATOR "/"
 #endif
 
-#include <vector>
+
 
 struct Mat
 {
