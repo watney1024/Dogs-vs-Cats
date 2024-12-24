@@ -1,6 +1,6 @@
 #include <vector>
 #include <iostream>
-#include <cmath> // 引入数学库，用于计算平方根和绝对值
+#include <cmath> 
 
 struct Mat
 {
