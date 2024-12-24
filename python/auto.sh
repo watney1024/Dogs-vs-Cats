@@ -2,7 +2,7 @@
 #激活虚拟环境
 
 # 定义模型名称
-MODEL_NAME="Cnn_250"
+MODEL_NAME="Bilinear_150"
 
 # 定义批处理大小
 BATCH_SIZE=16
@@ -11,10 +11,10 @@ BATCH_SIZE=16
 LEARNING_RATE=0.0001
 
 # 定义训练周期
-EPOCHS=1
+EPOCHS=100
 
 # 定义输入图片尺寸 (通道数, 高度, 宽度)
-INPUT_SHAPE=250
+INPUT_SHAPE=150
 
 # 运行Python训练脚本
 python auto_training.py \
