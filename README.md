@@ -31,3 +31,9 @@ conda activate pytorch #激活虚拟环境
 chmod +x auto.sh
 
 ./auto.sh & #执行sh脚本，可以在这个里面修改参数  
+
+
+## 2024年12月24日
+
+写了并且测试完了l2-normalization，sign-squared-root，avgpool和bmm算子。
+目前还差conv(之前没加padding)，和bn算子没写。
