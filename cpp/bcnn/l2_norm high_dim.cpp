@@ -1,6 +1,6 @@
 #include <vector>
 #include <iostream>
-#include <cmath> 
+#include <cmath>
 
 struct Mat
 {
@@ -55,20 +55,27 @@ void pretensor_simple(Mat& input) {
     }
 }
 
-// L2 Normalization 算子
+// L2 Normalization 算子(对应torch中dim=1情况)
 void L2Normalization(Mat& input, Mat& output) 
 {
-    double sum = 0;
-    for(int w = 0;w<input.width;++w)
+    for (int h = 0; h < input.height; ++h) 
     {
-        sum += input[w]*input[w];
+        for(int w = 0;w<input.width;++w)
+        {
+            double sum = 0;
+            for (int c = 0; c < input.channel; ++c)
+            {
+                int index = c * input.height * input.width + h * input.width + w;
+                sum += (input[index]*input[index]);
+            }
+            sum = sqrt(sum);
+            for (int c = 0; c < input.channel; ++c)
+            {
+                int index = c * input.height * input.width + h * input.width + w;
+                output[index] = input[index]/sum;
+            }
+        }
     }
-    sum = sqrt(sum+1e-10);
-    for(int w = 0;w<input.width;++w)
-    {
-        output[w] = input[w]/sum;
-    }
-
 }
 
 void printMat(Mat& mat) {
@@ -86,8 +93,8 @@ void printMat(Mat& mat) {
 }
 
 int main() {
-    Mat input(1,1,1,16384);
-    Mat output(1,1,1,16384);
+    Mat input(1,3,150,150);
+    Mat output(1,3,150,150);
     pretensor(input);
     L2Normalization(input, output);
     //printMat(input);

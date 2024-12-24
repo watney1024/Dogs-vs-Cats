@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 
-class Mat
+struct Mat
 {
 public:
     std::vector<float> tensor;
@@ -12,26 +12,25 @@ public:
     int height;
     int width;
 
-    // 构造函数
-    Mat(int d, int c, int h, int w) : dim(d), channel(c), height(h), width(w)
-    {
+    Mat() : dim(1), channel(3), height(150), width(150) {
+        tensor.resize(dim * channel * height * width);
+    }
+
+    // 多态构造函数
+    Mat(int d, int c, int h, int w) : dim(d), channel(c), height(h), width(w) {
         tensor.resize(d * c * h * w);
     }
 
-    // 重载 operator[] 以访问元素
-    float& operator[](size_t index);
-    const float& operator[](size_t index) const;
+    float& operator[](size_t index)
+    {
+        return tensor[index];
+    }
+
+    const float& operator[](size_t index) const
+    {
+        return tensor[index];
+    }
 };
-
-float& Mat::operator[](size_t index)
-{
-    return tensor[index];
-}
-
-const float& Mat::operator[](size_t index) const
-{
-    return tensor[index];
-}
 
 std::vector<int> padding;
 std::vector<int> kernel_size;
