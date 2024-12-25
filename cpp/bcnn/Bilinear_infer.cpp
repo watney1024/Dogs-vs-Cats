@@ -78,6 +78,29 @@ void printMat(Mat& mat) {
     std::puts("");
 }
 
+std::vector<Mat> mats(250);
+void get_mat(int num)
+{
+    unsigned int fixed_seed = 3407;
+    std::mt19937 gen(fixed_seed);  
+
+    std::uniform_real_distribution<> dist_real(0.0, 1.0);
+    for (int i = 0; i < num; ++i) {
+        mats[i] = Mat(1, 3, 150, 150);
+        for (int d = 0; d < mats[i].dim; ++d) {
+            for (int c = 0; c < mats[i].channel; ++c) {
+                for (int h = 0; h < mats[i].height; ++h) {
+                    for (int w = 0; w < mats[i].width; ++w) {
+                        int index = d * mats[i].channel * mats[i].height * mats[i].width +
+                            c * mats[i].height * mats[i].width +
+                            h * mats[i].width + w;
+                        mats[i][index] = dist_real(gen);
+                    }
+                }
+            }
+        }
+    }
+}
 
 bool readBinaryFile(const std::string& filepath, std::vector<float>& buffer)
 {
@@ -155,7 +178,7 @@ Mat conv1_output(1, 32, 150, 150);
 Mat relu1_output(1, 32, 150, 150);
 Mat conv2_output(1, 32, 150, 150);
 Mat relu2_output(1, 32, 150, 150);
-Mat bn1_output(1,32,150,150);
+Mat bn1_output(50, 2502,150,150);
 Mat mp1_output(1, 32, 75, 75);
 
 Mat conv3_output(1, 64, 75, 75);
@@ -232,6 +255,16 @@ double mp4_time[250];
 
 double avg1_time[250];
 
+double view1_time[250];
+double bmm_time[250];
+double view2_time[250];
+double ssr_time[250];
+double l2_time[250];
+
+double linear1_time[250];
+
+
+
 double calculateAverage(const double* array, int begin, int end) {
     double sum = 0.0;
     for (int i = begin; i < end; ++i) {
@@ -261,10 +294,10 @@ Mat padd(const Mat input,int this_padding)
     return new_mat;
 }
 
-void conv2d(const Mat &input, Mat &output, const std::vector<float> &weight, const std::vector<float> &bias,
+double conv2d(const Mat &input, Mat &output, const std::vector<float> &weight, const std::vector<float> &bias,
             const std::vector<int> &conv_kernel_size, const std::vector<int> &conv_stride, int conv_padding)
 {
-
+    double start = get_current_time();
     int weight_pos = 0;
     int conv_kernel_max = conv_kernel_size[0]*conv_kernel_size[1];
     Mat padded_mat = padd(input,conv_padding);
@@ -340,10 +373,13 @@ void conv2d(const Mat &input, Mat &output, const std::vector<float> &weight, con
             output[i * output.height * output.width + j] += bias[i];
         }
     }
+    double end = get_current_time();
+    return (end - start);
 }
 
-void relu(const Mat &input,Mat &output)
+double relu(const Mat &input,Mat &output)
 {
+    double start = get_current_time();
     int sum = (input.dim * input.channel * input.height * input.width);
     for (int i = 0; i < sum; ++i)
     {
@@ -352,10 +388,13 @@ void relu(const Mat &input,Mat &output)
         else
             output[i] = input[i];
     }
+    double end = get_current_time();
+    return (end - start);
 }
 
-void bn(const Mat& input, Mat&output,std::vector<float> weight,std::vector<float> bias, std::vector<float> rm, std::vector<float> rv)
+double bn(const Mat& input, Mat&output,std::vector<float> weight,std::vector<float> bias, std::vector<float> rm, std::vector<float> rv)
 {
+    double start = get_current_time();
     double eps = 1e-5;
     for(int c = 0;c<input.channel;++c)
     {
@@ -369,10 +408,13 @@ void bn(const Mat& input, Mat&output,std::vector<float> weight,std::vector<float
             }
         }
     }
+    double end = get_current_time();
+    return (end - start);
 }
 
-void mp(const Mat& input, Mat& output,std::vector<int> mp_kernel_size,std::vector<int> mp_stride)
+double mp(const Mat& input, Mat& output,std::vector<int> mp_kernel_size,std::vector<int> mp_stride)
 {
+    double start = get_current_time();
     int input_h = input.height;
     int input_w = input.width;
     int out_h = output.height;
@@ -410,9 +452,13 @@ void mp(const Mat& input, Mat& output,std::vector<int> mp_kernel_size,std::vecto
             }
         }
     }
+    double end = get_current_time();
+    return (end - start);
 }
 
-void avgp(const Mat& input, Mat& output,std::vector<int> avgp_kernel_size,std::vector<int> avgp_stride) {
+double avgp(const Mat& input, Mat& output,std::vector<int> avgp_kernel_size,std::vector<int> avgp_stride) 
+{
+    double start = get_current_time();
     int input_h = input.height;
     int input_w = input.width;
     int out_h = output.height;
@@ -440,6 +486,8 @@ void avgp(const Mat& input, Mat& output,std::vector<int> avgp_kernel_size,std::v
             }
         }
     }
+    double end = get_current_time();
+    return (end - start);
 }
 
 double view(const Mat& input, Mat & output)
@@ -459,8 +507,9 @@ double view(const Mat& input, Mat & output)
     return (end - start);
 }
 
-void bmm(const Mat& input,Mat& output) 
+double bmm(const Mat& input,Mat& output) 
 {
+    double start = get_current_time();
     for(int i = 0;i<input.height;++i)
     {
         for(int j = 0;j<input.height;++j)
@@ -477,10 +526,13 @@ void bmm(const Mat& input,Mat& output)
             //output[index] = sum;
         }
     }
+    double end = get_current_time();
+    return (end - start);
 }
 
-void SignSquareRoot(Mat& input, Mat& output) 
+double SignSquareRoot(Mat& input, Mat& output) 
 {
+    double start = get_current_time();
     for (int d = 0; d < input.dim; ++d) {
         for (int c = 0; c < input.channel; ++c) {
             for (int h = 0; h < input.height; ++h) {
@@ -492,10 +544,13 @@ void SignSquareRoot(Mat& input, Mat& output)
             }
         }
     }
+    double end = get_current_time();
+    return (end - start);
 }
 
-void L2Normalization(Mat& input, Mat& output) 
+double L2Normalization(Mat& input, Mat& output) 
 {
+    double start = get_current_time();
     double sum = 0;
     for(int w = 0;w<input.width;++w)
     {
@@ -506,7 +561,8 @@ void L2Normalization(Mat& input, Mat& output)
     {
         output[w] = input[w]/sum;
     }
-
+    double end = get_current_time();
+    return (end - start);
 }
 
 double linear(const Mat& input, Mat& output, std::vector<float> weight, std::vector<float> bias)
@@ -619,43 +675,72 @@ void preread()
 
 int forward(Mat & input, int i)
 {
-    conv2d(conv1_input,conv1_output,conv1_weight,conv1_bias,kernel_size55,stride11,padding2);
-    relu(conv1_output,relu1_output);
-    conv2d(relu1_output,conv2_output,conv2_weight,conv2_bias,kernel_size55,stride11,padding2);
-    relu(conv2_output,relu2_output);
-    bn(relu2_output,bn1_output,bn1_weight,bn1_bias,bn1_mm, bn1_mv);
-    mp(bn1_output,mp1_output,kernel_size22,stride22);
+    conv1_time[i] = conv2d(conv1_input,conv1_output,conv1_weight,conv1_bias,kernel_size55,stride11,padding2);
+    all_time[i] += conv1_time[i];
+    relu1_time[i] = relu(conv1_output,relu1_output);
+    all_time[i] += relu1_time[i];
+    conv2_time[i] =  conv2d(relu1_output,conv2_output,conv2_weight,conv2_bias,kernel_size55,stride11,padding2);
+    all_time[i] += conv2_time[i];
+    relu2_time[i] = relu(conv2_output,relu2_output);
+    all_time[i] += relu2_time[i];
+    bn1_time[i] = bn(relu2_output,bn1_output,bn1_weight,bn1_bias,bn1_mm, bn1_mv);
+    all_time[i] += bn1_time[i];
+    mp1_time[i] = mp(bn1_output,mp1_output,kernel_size22,stride22);
+    all_time[i] += mp1_time[i];
 
-    conv2d(mp1_output,conv3_output,conv3_weight,conv3_bias,kernel_size55,stride11,padding2);
-    relu(conv3_output,relu3_output);
-    conv2d(relu3_output,conv4_output,conv4_weight,conv4_bias,kernel_size55,stride11,padding2);
-    relu(conv4_output,relu4_output);
-    bn(relu4_output,bn2_output,bn2_weight,bn2_bias,bn2_mm, bn2_mv);
-    mp(bn2_output,mp2_output,kernel_size22,stride22);
+    conv3_time[i] = conv2d(mp1_output,conv3_output,conv3_weight,conv3_bias,kernel_size55,stride11,padding2);
+    all_time[i] += conv3_time[i];
+    relu3_time[i] = relu(conv3_output,relu3_output);
+    all_time[i] += relu3_time[i];
+    conv4_time[i] = conv2d(relu3_output,conv4_output,conv4_weight,conv4_bias,kernel_size55,stride11,padding2);
+    all_time[i] += conv4_time[i];
+    relu4_time[i] = relu(conv4_output,relu4_output);
+    all_time[i] += relu4_time[i];
+    bn2_time[i] = bn(relu4_output,bn2_output,bn2_weight,bn2_bias,bn2_mm, bn2_mv);
+    all_time[i] += bn2_time[i];
+    mp2_time[i] = mp(bn2_output,mp2_output,kernel_size22,stride22);
+    all_time[i] += mp2_time[i];
 
-    conv2d(mp2_output,conv5_output,conv5_weight,conv5_bias,kernel_size33,stride11,padding1);
-    relu(conv5_output,relu5_output);
-    conv2d(relu5_output,conv6_output,conv6_weight,conv6_bias,kernel_size33,stride11,padding1);
-    relu(conv6_output,relu6_output);
+    conv5_time[i] = conv2d(mp2_output,conv5_output,conv5_weight,conv5_bias,kernel_size33,stride11,padding1);
+    all_time[i] += conv5_time[i];
+    relu5_time[i] = relu(conv5_output,relu5_output);
+    all_time[i] += relu5_time[i];
+    conv6_time[i] = conv2d(relu5_output,conv6_output,conv6_weight,conv6_bias,kernel_size33,stride11,padding1);
+    all_time[i] += conv6_time[i];
+    relu6_time[i] = relu(conv6_output,relu6_output);
+    all_time[i] += relu6_time[i];
+    bn3_time[i] = bn(relu6_output,bn3_output,bn3_weight,bn3_bias,bn3_mm, bn3_mv);
+    all_time[i] += bn3_time[i];
+    mp3_time[i] = mp(bn3_output,mp3_output,kernel_size22,stride22);
+    all_time[i] += mp3_time[i];
 
-    bn(relu6_output,bn3_output,bn3_weight,bn3_bias,bn3_mm, bn3_mv);
-    mp(bn3_output,mp3_output,kernel_size22,stride22);
+    conv7_time[i] = conv2d(mp3_output,conv7_output,conv7_weight,conv7_bias,kernel_size33,stride11,padding1);
+    all_time[i] += conv7_time[i];
+    relu7_time[i] = relu(conv7_output,relu7_output);
+    all_time[i] += relu7_time[i];
+    conv8_time[i] = conv2d(relu7_output,conv8_output,conv8_weight,conv8_bias,kernel_size33,stride11,padding1);
+    all_time[i] += conv8_time[i];
+    relu8_time[i] = relu(conv8_output,relu8_output);
+    all_time[i] += relu8_time[i];
+    bn4_time[i] = bn(relu8_output,bn4_output,bn4_weight,bn4_bias,bn4_mm, bn4_mv);
+    all_time[i] += bn4_time[i];
+    mp4_time[i] = mp(bn4_output,mp4_output,kernel_size22,stride22);
+    all_time[i] += mp4_time[i];
+    avg1_time[i] = avgp(mp4_output,avg_output,kernel_size22,stride22);
+    all_time[i] += avg1_time[i];
 
-    conv2d(mp3_output,conv7_output,conv7_weight,conv7_bias,kernel_size33,stride11,padding1);
-    relu(conv7_output,relu7_output);
-    conv2d(relu7_output,conv8_output,conv8_weight,conv8_bias,kernel_size33,stride11,padding1);
-    relu(conv8_output,relu8_output);
-    bn(relu8_output,bn4_output,bn4_weight,bn4_bias,bn4_mm, bn4_mv);
-    mp(bn4_output,mp4_output,kernel_size22,stride22);
-
-    avgp(mp4_output,avg_output,kernel_size22,stride22);
-
-    view(avg_output,view1_output);
-    bmm(view1_output,bmm_output);
-    view(bmm_output,view2_output);
-    SignSquareRoot(view2_output,ssr_output);
-    L2Normalization(ssr_output,l2_output);
-    linear(l2_output,linear1_output,linear1_weight,linear1_bias);
+    view1_time[i] = view(avg_output,view1_output);
+    all_time[i] += view1_time[i];
+    bmm_time[i] = bmm(view1_output,bmm_output);
+    all_time[i] += bmm_time[i];
+    view2_time[i] = view(bmm_output,view2_output);
+    all_time[i] += view2_time[i];
+    ssr_time[i] = SignSquareRoot(view2_output,ssr_output);
+    all_time[i] += ssr_time[i];
+    l2_time[i] = L2Normalization(ssr_output,l2_output);
+    all_time[i] += l2_time[i];
+    linear1_time[i] = linear(l2_output,linear1_output,linear1_weight,linear1_bias);
+    all_time[i] += linear1_time[i];
 
     std::cout<<sigmoid(linear1_output[0]);
 
@@ -666,7 +751,67 @@ int forward(Mat & input, int i)
 int main()
 {
     preread();
-    pretensor(conv1_input);
-    forward(conv1_input,0);
+    //pretensor(conv1_input);
+    //forward(conv1_input,0);
+    get_mat(250);
+    for(int i = 0;i<250;++i)
+    {
+        forward(mats[i], i);
+    }
+    double avgConv1Time = calculateAverage(conv1_time, 50, 250);
+    double avgRelu1Time = calculateAverage(relu1_time, 50, 250);
+    double avgConv2Time = calculateAverage(conv2_time, 50, 250);
+    double avgRelu2Time = calculateAverage(relu2_time, 50, 250);
+    double avgBn1Time = calculateAverage(bn1_time, 50, 250);
+    double avgMp1Time = calculateAverage(mp1_time, 50, 250);
+
+
+    double avgConv3Time = calculateAverage(conv3_time,50, 250);
+    double avgRelu3Time = calculateAverage(relu3_time, 50, 250);
+    double avgConv4Time = calculateAverage(conv4_time, 50, 250);
+    double avgRelu4Time = calculateAverage(relu4_time, 50, 250);
+    double avgBn2Time = calculateAverage(bn2_time, 50, 250);
+    double avgMp2Time = calculateAverage(mp2_time, 50, 250);
+
+    double avgConv5Time = calculateAverage(conv5_time, 50, 250);
+    double avgRelu5Time = calculateAverage(relu5_time,50, 250);
+    double avgConv6Time = calculateAverage(conv6_time, 50, 250);
+    double avgRelu6Time = calculateAverage(relu6_time, 50, 250);
+    double avgBn3Time = calculateAverage(bn3_time, 50, 250);
+    double avgMp3Time = calculateAverage(mp3_time, 50, 250);
+
+    double avgConv7Time = calculateAverage(conv7_time, 50, 250);
+    double avgRelu7Time = calculateAverage(relu7_time, 50, 250);
+    double avgConv8Time = calculateAverage(conv8_time, 50, 250);
+    double avgRelu8Time = calculateAverage(relu8_time, 50, 250);
+    double avgBn4Time = calculateAverage(bn4_time, 50, 250);
+    double avgMp4Time = calculateAverage(mp4_time, 50, 250);
+
+    double avgAvgpTime = calculateAverage(avg1_time,50, 250);
+
+    double avgView1Time = calculateAverage(view1_time,50, 250);
+    double avgBmmTime = calculateAverage(bmm_time,50, 250);
+    double avgView2Time = calculateAverage(view2_time,50, 250);
+    double avgSsrTime = calculateAverage(ssr_time,50, 250);
+    double avgL2Time = calculateAverage(l2_time,50, 250);
+    double avgLinear1Time = calculateAverage(linear1_time,50, 250);
+
+    double avgAllTime = calculateAverage(all_time, 50, 250);
+    printf("Average conv1 time: %.3lf, Average relu1 time: %.3lf, Average conv2 time: %.3lf, Average relu2 time: %.3lf\n", avgConv1Time, avgRelu1Time, avgConv2Time,avgRelu2Time);
+    printf("Average bn1 time: %.3lf, Average mp1 time: %.3lf\n", avgBn1Time,avgMp1Time);
+    printf("Average conv3 time: %.3lf, Average relu3 time: %.3lf, Average conv4 time: %.3lf, Average relu4 time: %.3lf\n", avgConv3Time, avgRelu3Time, avgConv4Time,avgRelu4Time);
+    printf("Average bn2 time: %.3lf, Average mp2 time: %.3lf\n", avgBn2Time,avgMp2Time);
+    printf("Average conv5 time: %.3lf, Average relu5 time: %.3lf, Average conv6 time: %.3lf, Average relu6 time: %.3lf\n", avgConv5Time, avgRelu5Time, avgConv6Time,avgRelu6Time);
+    printf("Average bn3 time: %.3lf, Average mp3 time: %.3lf\n", avgBn3Time,avgMp3Time);
+    printf("Average conv7 time: %.3lf, Average relu7 time: %.3lf, Average conv8 time: %.3lf, Average relu8 time: %.3lf\n", avgConv7Time, avgRelu7Time, avgConv8Time,avgRelu8Time);
+    printf("Average bn4 time: %.3lf, Average mp4 time: %.3lf\n", avgBn4Time,avgMp4Time);
+
+    printf("Average avgp time: %.3lf\n", avgAvgpTime);
+    
+    printf("Average view1 time: %.3lf, Average bmm time: %.3lf, Average view2 time: %.3lf, Average ssr time: %.3lf, Average l2 time: %.3lf\n", avgView1Time, avgBmmTime, avgView2Time, avgSsrTime, avgL2Time);
+    printf("Average linear1 time: %.3lf \n", avgLinear1Time);
+    printf("Average all time: %.3lf ms\n", avgAllTime);
     return 0;
+
 }
+
