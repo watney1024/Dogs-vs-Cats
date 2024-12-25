@@ -2,7 +2,7 @@
 #激活虚拟环境
 
 # 定义模型名称
-MODEL_NAME="Bilinear_150"
+MODEL_NAME="Bilinear_150_bnrelu"
 
 # 定义批处理大小
 BATCH_SIZE=16

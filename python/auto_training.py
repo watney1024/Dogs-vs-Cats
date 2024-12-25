@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 
-from Net import Cnn_250, AlexNet_250, Dnn_250, Bilinear_250, Cnn_150, AlexNet_150, Dnn_150, Bilinear_150
+from Net import Cnn_250, AlexNet_250, Dnn_250, Bilinear_250, Cnn_150, AlexNet_150, Dnn_150, Bilinear_150, Bilinear_150_bnrelu
 
 # 配置 logging
 logging.basicConfig(filename='training.log',
@@ -42,7 +42,8 @@ model_dict = {
     'Cnn_150': Cnn_150,
     'AlexNet_150': AlexNet_150,
     'Dnn_150': Dnn_150,
-    'Bilinear_150': Bilinear_150
+    'Bilinear_150': Bilinear_150,
+    'Bilinear_150_bnrelu': Bilinear_150_bnrelu
 }
 model_name = args.model
 batch_size = args.batch_size
