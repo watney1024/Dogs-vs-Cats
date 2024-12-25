@@ -37,3 +37,8 @@ chmod +x auto.sh
 
 写了并且测试完了l2-normalization，sign-squared-root，avgpool和bmm算子。
 目前还差conv(之前没加padding)，和bn算子没写。
+
+## 2024年12月25日
+
+把所有算子都写完了，并且最终结果和python上一样(c++的output: 0.153745，python的output: 0.153746)，接下来就是测速度了。  
+在写bn算子的时候我发现bn要在relu前面使用，这样效果更好，修改后跑了下正确率可以提高3%左右。
