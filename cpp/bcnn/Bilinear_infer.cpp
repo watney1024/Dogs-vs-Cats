@@ -6,6 +6,7 @@
 #include <time.h>
 #include <random>
 #include <cstring>
+
 #if defined(_WIN32)
 #define PATH_SEPARATOR "\\\\"
 #else
@@ -291,6 +292,7 @@ Mat padd(const Mat input, int this_padding)
     int new_width = input.width + 2 * this_padding;
     Mat new_mat(input.dim, input.channel, new_height, new_width);
     std::fill(new_mat.tensor.begin(), new_mat.tensor.end(), 0);
+
     for (int c = 0; c < input.channel; ++c)
     {
         for (int h = 0; h < input.height; ++h)
@@ -411,6 +413,7 @@ double relu(const Mat &input, Mat &output)
 {
     double start = get_current_time();
     int sum = (input.dim * input.channel * input.height * input.width);
+
     for (int i = 0; i < sum; ++i)
     {
         if (input[i] < 0)
@@ -426,6 +429,7 @@ double bn(const Mat &input, Mat &output, std::vector<float> weight, std::vector<
 {
     double start = get_current_time();
     double eps = 1e-5;
+
     for (int c = 0; c < input.channel; ++c)
     {
         for (int h = 0; h < input.height; ++h)
@@ -453,6 +457,7 @@ double mp(const Mat &input, Mat &output, std::vector<int> mp_kernel_size, std::v
     int mp_kernel_max = mp_kernel_size[0] * mp_kernel_size[1];
     int dx[4] = {0, 1, input.width, (input.width + 1)};
     int cnt = 0;
+
     for (int d = 0; d < input.dim; ++d)
     {
         for (int c = 0; c < input.channel; ++c)
@@ -547,6 +552,7 @@ double view(const Mat &input, Mat &output)
 double bmm(const Mat &input, Mat &output)
 {
     double start = get_current_time();
+
     for (int i = 0; i < input.height; ++i)
     {
         for (int j = 0; j < input.height; ++j)
@@ -570,6 +576,7 @@ double bmm(const Mat &input, Mat &output)
 double SignSquareRoot(Mat &input, Mat &output)
 {
     double start = get_current_time();
+
     for (int d = 0; d < input.dim; ++d)
     {
         for (int c = 0; c < input.channel; ++c)
@@ -790,64 +797,64 @@ int forward(Mat &input, int i)
 int main()
 {
     preread();
-    pretensor(conv1_input);
-    forward(conv1_input,0);
-    // get_mat(250);
-    // for (int i = 0; i < 250; ++i)
-    // {
-    //     forward(mats[i], i);
-    // }
-    // double avgConv1Time = calculateAverage(conv1_time, 50, 250);
-    // double avgRelu1Time = calculateAverage(relu1_time, 50, 250);
-    // double avgConv2Time = calculateAverage(conv2_time, 50, 250);
-    // double avgRelu2Time = calculateAverage(relu2_time, 50, 250);
-    // double avgBn1Time = calculateAverage(bn1_time, 50, 250);
-    // double avgMp1Time = calculateAverage(mp1_time, 50, 250);
+    //pretensor(conv1_input);
+    //forward(conv1_input,0);
+    get_mat(10);
+    for (int i = 0; i < 10; ++i)
+    {
+        forward(mats[i], i);
+    }
+    double avgConv1Time = calculateAverage(conv1_time, 5, 10);
+    double avgRelu1Time = calculateAverage(relu1_time, 5, 10);
+    double avgConv2Time = calculateAverage(conv2_time, 5, 10);
+    double avgRelu2Time = calculateAverage(relu2_time, 5, 10);
+    double avgBn1Time = calculateAverage(bn1_time, 5, 10);
+    double avgMp1Time = calculateAverage(mp1_time, 5, 10);
 
-    // double avgConv3Time = calculateAverage(conv3_time, 50, 250);
-    // double avgRelu3Time = calculateAverage(relu3_time, 50, 250);
-    // double avgConv4Time = calculateAverage(conv4_time, 50, 250);
-    // double avgRelu4Time = calculateAverage(relu4_time, 50, 250);
-    // double avgBn2Time = calculateAverage(bn2_time, 50, 250);
-    // double avgMp2Time = calculateAverage(mp2_time, 50, 250);
+    double avgConv3Time = calculateAverage(conv3_time, 5, 10);
+    double avgRelu3Time = calculateAverage(relu3_time, 5, 10);
+    double avgConv4Time = calculateAverage(conv4_time, 5, 10);
+    double avgRelu4Time = calculateAverage(relu4_time, 5, 10);
+    double avgBn2Time = calculateAverage(bn2_time, 5, 10);
+    double avgMp2Time = calculateAverage(mp2_time, 5, 10);
 
-    // double avgConv5Time = calculateAverage(conv5_time, 50, 250);
-    // double avgRelu5Time = calculateAverage(relu5_time, 50, 250);
-    // double avgConv6Time = calculateAverage(conv6_time, 50, 250);
-    // double avgRelu6Time = calculateAverage(relu6_time, 50, 250);
-    // double avgBn3Time = calculateAverage(bn3_time, 50, 250);
-    // double avgMp3Time = calculateAverage(mp3_time, 50, 250);
+    double avgConv5Time = calculateAverage(conv5_time, 5, 10);
+    double avgRelu5Time = calculateAverage(relu5_time, 5, 10);
+    double avgConv6Time = calculateAverage(conv6_time, 5, 10);
+    double avgRelu6Time = calculateAverage(relu6_time, 5, 10);
+    double avgBn3Time = calculateAverage(bn3_time, 5, 10);
+    double avgMp3Time = calculateAverage(mp3_time, 5, 10);
 
-    // double avgConv7Time = calculateAverage(conv7_time, 50, 250);
-    // double avgRelu7Time = calculateAverage(relu7_time, 50, 250);
-    // double avgConv8Time = calculateAverage(conv8_time, 50, 250);
-    // double avgRelu8Time = calculateAverage(relu8_time, 50, 250);
-    // double avgBn4Time = calculateAverage(bn4_time, 50, 250);
-    // double avgMp4Time = calculateAverage(mp4_time, 50, 250);
+    double avgConv7Time = calculateAverage(conv7_time, 5, 10);
+    double avgRelu7Time = calculateAverage(relu7_time, 5, 10);
+    double avgConv8Time = calculateAverage(conv8_time, 5, 10);
+    double avgRelu8Time = calculateAverage(relu8_time, 5, 10);
+    double avgBn4Time = calculateAverage(bn4_time, 5, 10);
+    double avgMp4Time = calculateAverage(mp4_time, 5, 10);
 
-    // double avgAvgpTime = calculateAverage(avg1_time, 50, 250);
+    double avgAvgpTime = calculateAverage(avg1_time, 5, 10);
 
-    // double avgView1Time = calculateAverage(view1_time, 50, 250);
-    // double avgBmmTime = calculateAverage(bmm_time, 50, 250);
-    // double avgView2Time = calculateAverage(view2_time, 50, 250);
-    // double avgSsrTime = calculateAverage(ssr_time, 50, 250);
-    // double avgL2Time = calculateAverage(l2_time, 50, 250);
-    // double avgLinear1Time = calculateAverage(linear1_time, 50, 250);
+    double avgView1Time = calculateAverage(view1_time, 5, 10);
+    double avgBmmTime = calculateAverage(bmm_time, 5, 10);
+    double avgView2Time = calculateAverage(view2_time, 5, 10);
+    double avgSsrTime = calculateAverage(ssr_time, 5, 10);
+    double avgL2Time = calculateAverage(l2_time, 5, 10);
+    double avgLinear1Time = calculateAverage(linear1_time, 5, 10);
 
-    // double avgAllTime = calculateAverage(all_time, 50, 250);
-    // printf("Average conv1 time: %.3lf, Average relu1 time: %.3lf, Average conv2 time: %.3lf, Average relu2 time: %.3lf\n", avgConv1Time, avgRelu1Time, avgConv2Time, avgRelu2Time);
-    // printf("Average bn1 time: %.3lf, Average mp1 time: %.3lf\n", avgBn1Time, avgMp1Time);
-    // printf("Average conv3 time: %.3lf, Average relu3 time: %.3lf, Average conv4 time: %.3lf, Average relu4 time: %.3lf\n", avgConv3Time, avgRelu3Time, avgConv4Time, avgRelu4Time);
-    // printf("Average bn2 time: %.3lf, Average mp2 time: %.3lf\n", avgBn2Time, avgMp2Time);
-    // printf("Average conv5 time: %.3lf, Average relu5 time: %.3lf, Average conv6 time: %.3lf, Average relu6 time: %.3lf\n", avgConv5Time, avgRelu5Time, avgConv6Time, avgRelu6Time);
-    // printf("Average bn3 time: %.3lf, Average mp3 time: %.3lf\n", avgBn3Time, avgMp3Time);
-    // printf("Average conv7 time: %.3lf, Average relu7 time: %.3lf, Average conv8 time: %.3lf, Average relu8 time: %.3lf\n", avgConv7Time, avgRelu7Time, avgConv8Time, avgRelu8Time);
-    // printf("Average bn4 time: %.3lf, Average mp4 time: %.3lf\n", avgBn4Time, avgMp4Time);
+    double avgAllTime = calculateAverage(all_time, 5, 10);
+    printf("Average conv1 time: %.3lf, Average relu1 time: %.3lf, Average conv2 time: %.3lf, Average relu2 time: %.3lf\n", avgConv1Time, avgRelu1Time, avgConv2Time, avgRelu2Time);
+    printf("Average bn1 time: %.3lf, Average mp1 time: %.3lf\n", avgBn1Time, avgMp1Time);
+    printf("Average conv3 time: %.3lf, Average relu3 time: %.3lf, Average conv4 time: %.3lf, Average relu4 time: %.3lf\n", avgConv3Time, avgRelu3Time, avgConv4Time, avgRelu4Time);
+    printf("Average bn2 time: %.3lf, Average mp2 time: %.3lf\n", avgBn2Time, avgMp2Time);
+    printf("Average conv5 time: %.3lf, Average relu5 time: %.3lf, Average conv6 time: %.3lf, Average relu6 time: %.3lf\n", avgConv5Time, avgRelu5Time, avgConv6Time, avgRelu6Time);
+    printf("Average bn3 time: %.3lf, Average mp3 time: %.3lf\n", avgBn3Time, avgMp3Time);
+    printf("Average conv7 time: %.3lf, Average relu7 time: %.3lf, Average conv8 time: %.3lf, Average relu8 time: %.3lf\n", avgConv7Time, avgRelu7Time, avgConv8Time, avgRelu8Time);
+    printf("Average bn4 time: %.3lf, Average mp4 time: %.3lf\n", avgBn4Time, avgMp4Time);
 
-    // printf("Average avgp time: %.3lf\n", avgAvgpTime);
+    printf("Average avgp time: %.3lf\n", avgAvgpTime);
 
-    // printf("Average view1 time: %.3lf, Average bmm time: %.3lf, Average view2 time: %.3lf, Average ssr time: %.3lf, Average l2 time: %.3lf\n", avgView1Time, avgBmmTime, avgView2Time, avgSsrTime, avgL2Time);
-    // printf("Average linear1 time: %.3lf \n", avgLinear1Time);
-    // printf("Average all time: %.3lf ms\n", avgAllTime);
+    printf("Average view1 time: %.3lf, Average bmm time: %.3lf, Average view2 time: %.3lf, Average ssr time: %.3lf, Average l2 time: %.3lf\n", avgView1Time, avgBmmTime, avgView2Time, avgSsrTime, avgL2Time);
+    printf("Average linear1 time: %.3lf \n", avgLinear1Time);
+    printf("Average all time: %.3lf ms\n", avgAllTime);
     return 0;
 }
