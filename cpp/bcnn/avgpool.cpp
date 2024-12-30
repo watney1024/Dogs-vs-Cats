@@ -98,7 +98,8 @@ double avgp(const Mat &input, Mat &output, std::vector<int> avgp_kernel_size, st
     //#pragma omp paralle for
     for (int d = 0; d < input.dim; ++d)
     {
-        #pragma omp parallel for
+        //#pragma omp parallel for
+        #pragma  parallel for
         for (int c = 0; c < input.channel; ++c)
         {
             //#pragma omp parallel for
