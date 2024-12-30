@@ -292,7 +292,7 @@ Mat padd(const Mat input, int this_padding)
     int new_width = input.width + 2 * this_padding;
     Mat new_mat(input.dim, input.channel, new_height, new_width);
     std::fill(new_mat.tensor.begin(), new_mat.tensor.end(), 0);
-    #pragma paralle for
+    #pragma omp parallel for
     for (int c = 0; c < input.channel; ++c)
     {
         for (int h = 0; h < input.height; ++h)
@@ -359,7 +359,7 @@ double conv2d(const Mat &input, Mat &output, const std::vector<float> &weight, c
         dx[23] = 4 * padded_mat.width + 3;
         dx[24] = 4 * padded_mat.width + 4;
     }
-    #pragma paralle for
+    //#pragma omp parallel for
     for (int i = 0; i < output.channel; ++i)
     {
         for (int d = 0; d < padded_mat.dim; ++d)
@@ -413,7 +413,7 @@ double relu(const Mat &input, Mat &output)
 {
     double start = get_current_time();
     int sum = (input.dim * input.channel * input.height * input.width);
-    #pragma paralle for
+    #pragma omp parallel for
     for (int i = 0; i < sum; ++i)
     {
         if (input[i] < 0)
@@ -429,7 +429,7 @@ double bn(const Mat &input, Mat &output, std::vector<float> weight, std::vector<
 {
     double start = get_current_time();
     double eps = 1e-5;
-    #pragma paralle for
+    #pragma omp parallel for
     for (int c = 0; c < input.channel; ++c)
     {
         for (int h = 0; h < input.height; ++h)
@@ -457,7 +457,7 @@ double mp(const Mat &input, Mat &output, std::vector<int> mp_kernel_size, std::v
     int mp_kernel_max = mp_kernel_size[0] * mp_kernel_size[1];
     int dx[4] = {0, 1, input.width, (input.width + 1)};
     int cnt = 0;
-    #pragma paralle for
+    #pragma omp parallel for
     for (int d = 0; d < input.dim; ++d)
     {
         for (int c = 0; c < input.channel; ++c)
@@ -499,7 +499,7 @@ double avgp(const Mat &input, Mat &output, std::vector<int> avgp_kernel_size, st
     int input_w = input.width;
     int out_h = output.height;
     int out_w = output.width;
-    #pragma paralle for
+    #pragma omp parallel for
     for (int d = 0; d < input.dim; ++d)
     {
         for (int c = 0; c < input.channel; ++c)
@@ -552,7 +552,7 @@ double view(const Mat &input, Mat &output)
 double bmm(const Mat &input, Mat &output)
 {
     double start = get_current_time();
-    #pragma paralle for
+    #pragma omp parallel for
     for (int i = 0; i < input.height; ++i)
     {
         for (int j = 0; j < input.height; ++j)
@@ -576,7 +576,7 @@ double bmm(const Mat &input, Mat &output)
 double SignSquareRoot(Mat &input, Mat &output)
 {
     double start = get_current_time();
-    #pragma paralle for
+    #pragma omp parallel for
     for (int d = 0; d < input.dim; ++d)
     {
         for (int c = 0; c < input.channel; ++c)
@@ -616,7 +616,7 @@ double L2Normalization(Mat &input, Mat &output)
 double linear(const Mat &input, Mat &output, std::vector<float> weight, std::vector<float> bias)
 {
     double start = get_current_time();
-    #pragma paralle for
+    #pragma omp parallel for
     for (int i = 0; i < output.width; i++)
     {
         float sum = 0;
@@ -796,7 +796,7 @@ int forward(Mat &input, int i)
 
 int main()
 {
-    omp_set_num_threads(4);
+    //omp_set_num_threads(4);
     preread();
     //pretensor(conv1_input);
     //forward(conv1_input,0);
