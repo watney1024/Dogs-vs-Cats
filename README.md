@@ -48,3 +48,7 @@ chmod +x auto.sh
 
 ## 2024年12月29日
 使用openmp在for循环前面加了# pragma parallel for,但是效果不大，运行时间在9258ms左右,可能是哪里设置的有问题。
+
+## 2024年12月30日
+才发现昨天的并行语句有问题，应该是#pragma omp parallel for,写成了#pragma parallel for, 虽然没报错, 但是并没有并行。  
+又试了下#pragma opm parallel for,故意打错的指令，但是不报错，还能正常运行，但是不起作用，还是有点坑的。
