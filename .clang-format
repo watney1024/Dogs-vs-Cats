@@ -1,0 +1,6 @@
+BasedOnStyle: Google
+Language: Cpp
+PointerBindsToType: true
+SortIncludes: true
+AlignTrailingComments:
+  Kind: Always
