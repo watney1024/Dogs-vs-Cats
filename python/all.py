@@ -36,12 +36,6 @@ val_transform = transforms.Compose([
     normalize  # 应用归一化
 ])
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-torch.manual_seed(3407)
-if device == 'cuda':
-    torch.cuda.manual_seed_all(3407)
-
-
 class Bilinear(nn.Module):
     def __init__(self, input_shape):
         super(Bilinear, self).__init__()
@@ -87,7 +81,6 @@ class Bilinear(nn.Module):
         x = torch.sigmoid(self.classifiers(x))
         x = self.dequant(x)
         return x.squeeze(1)
-
 
 # 定义训练函数
 def train(dataloader, model, loss_fn, optimizer):
@@ -154,80 +147,85 @@ def matplot_acc(train_acc, val_acc):
     plt.title("acc ")
     plt.show()
 
+if __name__ == "__main__":
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    torch.manual_seed(3407)
+    if device == 'cuda':
+        torch.cuda.manual_seed_all(3407)
 
-# 开始训练
-activation_sizes = [] # 存储中间激活值大小
-# lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
-for i in range(1):
-    model = Bilinear(input_shape).to(device)
-    
-    # 定义钩子函数并注册到 model 所有层
-    def hook_fn(module, input, output):
-        size_in_bytes = output.element_size() * output.numel() # 元素大小 * 元素总数
-        activation_sizes.append(size_in_bytes)
-    for name, layer in model.named_modules():
-        if isinstance(layer, (nn.Conv2d, nn.Linear, nn.ReLU)): # 选择需要监控的层
-            layer.register_forward_hook(hook_fn)
-    model.qconfig = get_default_qat_qconfig('fbgemm') # 配置 QAT
-    prepare_qat(model, inplace=True)
-
-    # 定义一个损失函数
-    loss_fn = nn.BCELoss()
-    # 定义一个优化器
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-    # 学习率每隔10轮变为原来的0.5
+    # 开始训练
+    activation_sizes = [] # 存储中间激活值大小
     # lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
-    ROOT_TRAIN = TRAIN_DIRS[i]
-    ROOT_TEST = VAL_DIRS[i]
-    train_dataset = ImageFolder(ROOT_TRAIN, transform=train_transform)
-    val_dataset = ImageFolder(ROOT_TEST, transform=val_transform)
-    train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=6)
-    val_dataloader = DataLoader(val_dataset, batch_size=16, shuffle=True, num_workers=6)
-    loss_train = []
-    acc_train = []
-    loss_val = []
-    acc_val = []
-    epoch = 1
-    min_acc = 0
-    best_epoch = 0
-    for t in range(epoch):
-        print(f"epoch{t + 1}\n-----------")
-        print(f"Memory usage: {psutil.Process(os.getpid()).memory_info().rss / 1024**2:.2f} MB")
-        start = time.time()
-        train_loss, train_acc = train(train_dataloader, model, loss_fn, optimizer)
-        val_loss, val_acc = val(val_dataloader, model, loss_fn)
+    for i in range(1):
+        model = Bilinear(input_shape).to(device)
+        
+        # 定义钩子函数并注册到 model 所有层
+        def hook_fn(module, input, output):
+            size_in_bytes = output.element_size() * output.numel() # 元素大小 * 元素总数
+            activation_sizes.append(size_in_bytes)
+        for name, layer in model.named_modules():
+            if isinstance(layer, (nn.Conv2d, nn.Linear, nn.ReLU)): # 选择需要监控的层
+                layer.register_forward_hook(hook_fn)
+        model.qconfig = get_default_qat_qconfig('fbgemm') # 配置 QAT
+        prepare_qat(model, inplace=True)
 
-        loss_train.append(train_loss)
-        acc_train.append(train_acc)
-        loss_val.append(val_loss)
-        acc_val.append(val_acc)
-        # 保存最好的模型权重
-        if val_acc > min_acc:
-            folder = 'save_model'
-            if not os.path.exists(folder):
-                os.mkdir('save_model')
-            min_acc = val_acc
-            print(f"save best model, 第{t + 1}轮")
-            best_epoch = t
-            torch.save(model.state_dict(), 'save_model/best_bilinear.pth')
-        # 保存最后一轮的权重文件
-        if t == epoch - 1:
-            torch.save(model.state_dict(), 'save_model/last_bilinear.pth')
-        # lr_scheduler.step()
-        end = time.time()
-        print(end - start)
-    # matplot_loss(loss_train, loss_val)
-    # matplot_acc(acc_train, acc_val)
-print('finish training')
+        # 定义一个损失函数
+        loss_fn = nn.BCELoss()
+        # 定义一个优化器
+        optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+        # 学习率每隔10轮变为原来的0.5
+        # lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
+        ROOT_TRAIN = TRAIN_DIRS[i]
+        ROOT_TEST = VAL_DIRS[i]
+        train_dataset = ImageFolder(ROOT_TRAIN, transform=train_transform)
+        val_dataset = ImageFolder(ROOT_TEST, transform=val_transform)
+        train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=6)
+        val_dataloader = DataLoader(val_dataset, batch_size=16, shuffle=True, num_workers=6)
+        loss_train = []
+        acc_train = []
+        loss_val = []
+        acc_val = []
+        epoch = 1
+        min_acc = 0
+        best_epoch = 0
+        for t in range(epoch):
+            print(f"epoch{t + 1}\n-----------")
+            print(f"Memory usage: {psutil.Process(os.getpid()).memory_info().rss / 1024**2:.2f} MB")
+            start = time.time()
+            train_loss, train_acc = train(train_dataloader, model, loss_fn, optimizer)
+            val_loss, val_acc = val(val_dataloader, model, loss_fn)
 
-print('start validation')
-# 测试不开启量化 model 最大中间激活值内存
-activation_sizes= []
-val_loss, val_acc = val(val_dataloader, model, loss_fn)
-print(f"model activation sizes: {max(activation_sizes) / (1024 ** 2):.4f} MB")
-# 测试开启量化后 model 最大中间激活值内存
-torch.backends.quantized.engine = 'fbgemm'
-quantized_model = torch.quantization.convert(model, inplace=False)
-activation_sizes= []
-val_loss, val_acc = val(val_dataloader, quantized_model, loss_fn)
-print(f"quantized_model activation sizes: {max(activation_sizes) / (1024 ** 2):.4f} MB")
+            loss_train.append(train_loss)
+            acc_train.append(train_acc)
+            loss_val.append(val_loss)
+            acc_val.append(val_acc)
+            # 保存最好的模型权重
+            if val_acc > min_acc:
+                folder = 'save_model'
+                if not os.path.exists(folder):
+                    os.mkdir('save_model')
+                min_acc = val_acc
+                print(f"save best model, 第{t + 1}轮")
+                best_epoch = t
+                torch.save(model.state_dict(), 'save_model/best_bilinear.pth')
+            # 保存最后一轮的权重文件
+            if t == epoch - 1:
+                torch.save(model.state_dict(), 'save_model/last_bilinear.pth')
+            # lr_scheduler.step()
+            end = time.time()
+            print(end - start)
+        # matplot_loss(loss_train, loss_val)
+        # matplot_acc(acc_train, acc_val)
+    print('finish training')
+
+    print('start validation')
+    # 测试不开启量化 model 最大中间激活值内存
+    activation_sizes= []
+    val_loss, val_acc = val(val_dataloader, model, loss_fn)
+    print(f"model activation sizes: {max(activation_sizes) / (1024 ** 2):.4f} MB")
+    # 测试开启量化后 model 最大中间激活值内存
+    torch.backends.quantized.engine = 'fbgemm'
+    quantized_model = torch.quantization.convert(model, inplace=False)
+    activation_sizes= []
+    val_loss, val_acc = val(val_dataloader, quantized_model, loss_fn)
+    print(f"quantized_model activation sizes: {max(activation_sizes) / (1024 ** 2):.4f} MB")
