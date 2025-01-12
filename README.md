@@ -57,3 +57,20 @@ chmod +x auto.sh
 ## 2025年1月11日
 
 上传了科研训练的总结，以及通过hook可视化中间层的文件。
+
+## 2025年1月12日
+
+给conv算子加上了并行，在并行的时候发现如果不符合规则会有额外的运行开销，包括并行里面有continue，多个线程同时访问变量（包括自增等）。解决方法就是首先修改掉continue部分，使得循环次数确定，之后在并行过程中多使用“绝对位置”，少用“相对位置”，例如
+
+```c++
+output[cnt[c]++] += sum;
+```
+
+由于多个线程同时访问，使得自增操作会有问题，解决方法要么使用critical锁住线程（但是会有额外时间开销），要么就是把cnt[c]修改成
+
+```c++
+int output_index = i * output.height * output.width + h * output.width + w;
+output[output_index] += (padded_mat[index + dx[m]] * weight[weight_pos + m]);
+```
+
+这样可以避免这种情况。这样子推理整体运行时间从9秒降到了3秒。
