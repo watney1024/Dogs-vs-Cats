@@ -368,3 +368,9 @@ runs/
 save_model/
 model_output/
 output_image/
+
+*.exe
+*.png
+*.jpg
+temp.cpp
+test_openmp.cpp
