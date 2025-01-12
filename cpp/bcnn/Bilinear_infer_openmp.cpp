@@ -359,42 +359,27 @@ double conv2d(const Mat &input, Mat &output, const std::vector<float> &weight, c
         dx[23] = 4 * padded_mat.width + 3;
         dx[24] = 4 * padded_mat.width + 4;
     }
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < output.channel; ++i)
     {
         for (int d = 0; d < padded_mat.dim; ++d)
         {
             for (int c = 0; c < padded_mat.channel; ++c)
             {
-                for (int h = 0; h < padded_mat.height; h += conv_stride[0])
+                int weight_pos = i * padded_mat.channel * conv_kernel_max + c * conv_kernel_max;
+                for (int h = 0; h < input.height; h += conv_stride[0])
                 {
-                    // std::cout << weight_pos<<' ';
-                    //  if ((h + stride[0]) > height)
-                    //  continue;
-                    if (h + conv_kernel_size[0] > padded_mat.height)
-                        continue;
-                    for (int w = 0; w < padded_mat.width; w += conv_stride[1])
+
+                    for (int w = 0; w < input.width; w += conv_stride[1])
                     {
-                        // if ((w + stride[1]) > width)
-                        // continue;
-                        if (w + conv_kernel_size[1] > padded_mat.width)
-                            continue;
                         int index = d * padded_mat.channel * padded_mat.height * padded_mat.width + c * padded_mat.height * padded_mat.width + h * padded_mat.width + w;
-                        // std::cout << index << std::endl;
-                        sum = 0;
-                        for (int i = 0; i < conv_kernel_max; ++i)
+                        int output_index = i * output.height * output.width + h * output.width + w;
+                        for (int m = 0; m < conv_kernel_max; ++m)
                         {
-                            // std::cout << i<<' '<<dx[i] << ' ' << index + dx[i] << std::endl;
-                            // std::cout << weight_pos + i << ' ' << index + dx[i] << std::endl;
-                            sum += (padded_mat[index + dx[i]] * weight[weight_pos + i]);
+                            output[output_index] += (padded_mat[index + dx[m]] * weight[weight_pos + m]);
                         }
-                        // puts("");
-                        // std::cout<<sum<<' ';
-                        output[cnt[c]++] += sum;
-                        // std::cout<<output[cnt[c] - 1] << ' ';
                     }
                 }
-                weight_pos += conv_kernel_max;
             }
         }
     }
@@ -796,10 +781,13 @@ int forward(Mat &input, int i)
  
 int main()
 {
+    // output = 0.153745
     //omp_set_num_threads(4);
     preread();
-    //pretensor(conv1_input);
-    //forward(conv1_input,0);
+    // pretensor(conv1_input);
+    // forward(conv1_input,0);
+    // std::cout<<sigmoid(linear1_output[0]);
+    // return 0;
     get_mat(10);
     for (int i = 0; i < 10; ++i)
     {
