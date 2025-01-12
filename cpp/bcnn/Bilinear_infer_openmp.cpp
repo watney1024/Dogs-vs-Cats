@@ -793,7 +793,7 @@ int forward(Mat &input, int i)
     std::cout<< all_time[i]<<std::endl;
     return 0;
 }
-
+ 
 int main()
 {
     //omp_set_num_threads(4);
