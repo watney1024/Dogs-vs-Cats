@@ -797,8 +797,9 @@ int forward(Mat &input, int i)
 int main()
 {
     preread();
-    //pretensor(conv1_input);
-    //forward(conv1_input,0);
+    // pretensor(conv1_input);
+    // forward(conv1_input,0);
+    // return 0;
     get_mat(10);
     for (int i = 0; i < 10; ++i)
     {

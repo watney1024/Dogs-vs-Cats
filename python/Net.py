@@ -42,7 +42,7 @@ class Cnn_250(nn.Module):
 
 
 class AlexNet_250(nn.Module):
-    def __init__(self, input_shape):
+    def __init__(self):
         super(AlexNet_250, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=5, stride=1, padding=2)
         self.pool = nn.MaxPool2d(kernel_size=3, stride=2)
@@ -74,7 +74,7 @@ class AlexNet_250(nn.Module):
 
 
 class Dnn_250(nn.Module):
-    def __init__(self, input_shape):
+    def __init__(self):
         super(Dnn_250, self).__init__()
 
         # First Convolutional Block
@@ -240,7 +240,7 @@ class Cnn_150(nn.Module):
 
 
 class AlexNet_150(nn.Module):
-    def __init__(self, input_shape):
+    def __init__(self):
         super(AlexNet_150, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=5, stride=1, padding=2)
         self.pool = nn.MaxPool2d(kernel_size=3, stride=2)
@@ -272,7 +272,7 @@ class AlexNet_150(nn.Module):
 
 
 class Dnn_150(nn.Module):
-    def __init__(self, input_shape):
+    def __init__(self):
         super(Dnn_150, self).__init__()
 
         # First Convolutional Block

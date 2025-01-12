@@ -6,7 +6,7 @@
 #include <time.h> 
 #include <random>
 #include <cstring>
-
+#include <omp.h>
 
 #if defined(_WIN32)
 #define PATH_SEPARATOR "\\\\"
@@ -74,8 +74,8 @@ bool readBinaryFile(const std::string& filepath, std::vector<float>& buffer)
     }
 }
 
-Mat conv1_input(1, 3, 150, 150);
-Mat conv1_output(1, 32, 150, 150);
+Mat conv2_input(1, 3, 150, 150); 
+Mat conv2_output(1, 32, 150, 150);
 
 
 std::vector<int> conv_kernel_size = { 5,5 };
@@ -122,6 +122,13 @@ void printMat(Mat& mat)
     std::puts("");
 }
 
+double get_current_time()
+{
+    auto now = std::chrono::high_resolution_clock::now();
+    auto usec = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
+    return usec.count() / 1000.0;
+}
+
 Mat padd(const Mat input,int this_padding)
 {
     if(this_padding == 0)
@@ -143,10 +150,10 @@ Mat padd(const Mat input,int this_padding)
     return new_mat;
 }
 
-void conv2d(const Mat &input, Mat &output, const std::vector<float> &weight, const std::vector<float> &bias,
+double conv2d(const Mat &input, Mat &output, const std::vector<float> &weight, const std::vector<float> &bias,
             const std::vector<int> &kernel_size, const std::vector<int> &stride, int this_padding)
 {
-
+    double start = get_current_time();
     int weight_pos = 0;
     int conv_kernel_max = kernel_size[0]*kernel_size[1];
     Mat padded_mat = padd(input,padding);
@@ -176,27 +183,37 @@ void conv2d(const Mat &input, Mat &output, const std::vector<float> &weight, con
         dx[15] = 3 * padded_mat.width; dx[16] = 3 * padded_mat.width + 1; dx[17] = 3 * padded_mat.width + 2; dx[18] = 3 * padded_mat.width + 3; dx[19] = 3 * padded_mat.width + 4;
         dx[20] = 4 * padded_mat.width; dx[21] = 4 * padded_mat.width + 1; dx[22] = 4 * padded_mat.width + 2; dx[23] = 4 * padded_mat.width + 3; dx[24] = 4 * padded_mat.width + 4;
     }
-    
-    for (int i = 0; i < output.channel; ++i)
+    int oc = output.channel;
+    int pd = padded_mat.dim;
+    int pc = padded_mat.channel;
+    int ph = padded_mat.height;
+    int pw = padded_mat.width;
+    //#pragma omp parallel for
+    //#pragma parallel for
+    for (int i = 0; i < oc; ++i)
     {
-        for (int d = 0; d < padded_mat.dim; ++d)
+        //#pragma omp parallel for
+        for (int d = 0; d < pd; ++d)
         {
-            for (int c = 0; c < padded_mat.channel; ++c)
+            //#pragma omp parallel for
+            for (int c = 0; c < pc; ++c)
             {
-                for (int h = 0; h < padded_mat.height; h += conv_stride[0])
+                //#pragma omp parallel for
+                for (int h = 0; h < ph; h += conv_stride[0])
                 {
                     // std::cout << weight_pos<<' ';
                     //  if ((h + stride[0]) > height)
                     //  continue;
-                    if (h + conv_kernel_size[0] > padded_mat.height)
+                    if (h + conv_kernel_size[0] > ph)
                         continue;
-                    for (int w = 0; w < padded_mat.width; w += conv_stride[1])
+                    //#pragma omp parallel for
+                    for (int w = 0; w < pw; w += conv_stride[1])
                     {
                         // if ((w + stride[1]) > width)
                         // continue;
-                        if (w + conv_kernel_size[1] > padded_mat.width)
+                        if (w + conv_kernel_size[1] > pw)
                             continue;
-                        int index = d * padded_mat.channel * padded_mat.height * padded_mat.width + c * padded_mat.height * padded_mat.width + h * padded_mat.width + w;
+                        int index = d * pc * ph * pw + c * ph * pw + h * pw + w;
                         // std::cout << index << std::endl;
                         sum = 0;
                         for (int i = 0; i < conv_kernel_max; ++i)
@@ -222,19 +239,25 @@ void conv2d(const Mat &input, Mat &output, const std::vector<float> &weight, con
             output[i * output.height * output.width + j] += bias[i];
         }
     }
+    double end = get_current_time();
+    return (end-start);
 }
 
 
 int main()
 {
-    std::vector<float> conv1_weight(32 * 3 * 5 * 5);
-    std::vector<float> conv1_bias(32);
-    std::string conv1_weight_path = ".\\src" PATH_SEPARATOR "conv1.weight.bin";
-    std::string conv1_bias_path = ".\\src" PATH_SEPARATOR "conv1.bias.bin";
-    readBinaryFile(conv1_weight_path, conv1_weight);
-    readBinaryFile(conv1_bias_path, conv1_bias);
-    pretensor(conv1_input);
-    conv2d(conv1_input,conv1_output,conv1_weight,conv1_bias,conv_kernel_size,conv_stride,padding);
-    printMat(conv1_output);
+    //omp_set_num_threads(2);
+    std::vector<float> conv2_weight(32 * 3 * 5 * 5);
+    std::vector<float> conv2_bias(32);
+    std::string conv2_weight_path = ".\\src" PATH_SEPARATOR "conv1.weight.bin";
+    std::string conv2_bias_path = ".\\src" PATH_SEPARATOR "conv1.bias.bin";
+    readBinaryFile(conv2_weight_path, conv2_weight);
+    readBinaryFile(conv2_bias_path, conv2_bias);
+    pretensor(conv2_input);
+    
+    //for (int cc = 0;cc<5;++cc)
+        //std::cout<<conv2d(conv2_input,conv2_output,conv2_weight,conv2_bias,conv_kernel_size,conv_stride,padding)<<std::endl;
+    conv2d(conv2_input,conv2_output,conv2_weight,conv2_bias,conv_kernel_size,conv_stride,padding);
+    printMat(conv2_output);
     return 0;
 }

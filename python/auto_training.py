@@ -125,6 +125,8 @@ def val(dataloader, model, loss_fn):
 
 # 定义画图函数
 def matplot_loss(train_loss, val_loss, fold_number):
+    # 每次调用函数时创建一个新的图形
+    plt.figure()
     plt.plot(train_loss, label='train_loss')
     plt.plot(val_loss, label='val_loss')
     plt.legend(loc='best')
@@ -139,6 +141,8 @@ def matplot_loss(train_loss, val_loss, fold_number):
 
 
 def matplot_acc(train_acc, val_acc, fold_number):
+    # 每次调用函数时创建一个新的图形
+    plt.figure()
     plt.plot(train_acc, label='train_acc')
     plt.plot(val_acc, label='val_acc')
     plt.legend(loc='best')

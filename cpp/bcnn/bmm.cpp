@@ -78,7 +78,7 @@ void printMat(Mat& mat) {
     std::puts("");
 }
 
-// 示例用法
+
 int main() 
 {
     Mat input(1,1,128,16);

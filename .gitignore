@@ -370,4 +370,7 @@ model_output/
 output_image/
 
 *.exe
-* .png
+*.png
+*.jpg
+temp.cpp
+test_openmp.cpp
