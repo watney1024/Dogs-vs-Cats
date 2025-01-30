@@ -2,12 +2,10 @@ import os
 import time
 
 import psutil
-import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from torch.quantization import get_default_qat_qconfig, prepare_qat, convert
-from torchvision import transforms
+from torch.quantization import get_default_qat_qconfig, prepare_qat
 from torchvision.datasets import ImageFolder
 
 from model import Bilinear
@@ -20,7 +18,6 @@ if __name__ == "__main__":
 
     # 开始训练
     activation_sizes = [] # 存储中间激活值大小
-    # lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
     for i in range(1):
         model = Bilinear(input_shape).to(device)
         
@@ -38,8 +35,6 @@ if __name__ == "__main__":
         loss_fn = nn.BCELoss()
         # 定义一个优化器
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-        # 学习率每隔10轮变为原来的0.5
-        # lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
         ROOT_TRAIN = TRAIN_DIRS[i]
         ROOT_TEST = VAL_DIRS[i]
         train_dataset = ImageFolder(ROOT_TRAIN, transform=train_transform)
@@ -64,23 +59,8 @@ if __name__ == "__main__":
             acc_train.append(train_acc)
             loss_val.append(val_loss)
             acc_val.append(val_acc)
-            # 保存最好的模型权重
-            if val_acc > min_acc:
-                folder = 'save_model'
-                if not os.path.exists(folder):
-                    os.mkdir('save_model')
-                min_acc = val_acc
-                print(f"save best model, 第{t + 1}轮")
-                best_epoch = t
-                torch.save(model.state_dict(), 'save_model/best_bilinear.pth')
-            # 保存最后一轮的权重文件
-            if t == epoch - 1:
-                torch.save(model.state_dict(), 'save_model/last_bilinear.pth')
-            # lr_scheduler.step()
             end = time.time()
             print(end - start)
-        # matplot_loss(loss_train, loss_val)
-        # matplot_acc(acc_train, acc_val)
     print('finish training')
 
     print('start validation')

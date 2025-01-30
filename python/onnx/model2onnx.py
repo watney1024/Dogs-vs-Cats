@@ -2,6 +2,7 @@ import onnx
 import torch
 import torch.onnx
 from torch.utils.data import DataLoader
+from torch.quantization import get_default_qat_qconfig, prepare_qat
 from torchvision.datasets import ImageFolder
 
 from model import Bilinear
@@ -11,7 +12,12 @@ from train import VAL_DIRS, val_transform
 if __name__ == "__main__":
     input_shape = (3, 150, 150)
     model = Bilinear(input_shape)
-    model.eval()
+
+    model.qconfig = get_default_qat_qconfig('fbgemm') # 配置 QAT
+    prepare_qat(model, inplace=True)
+
+    torch.backends.quantized.engine = 'fbgemm'
+    quantized_model = torch.quantization.convert(model, inplace=False)
 
     dataset = ImageFolder(VAL_DIRS[0], transform=val_transform)
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=6)
@@ -19,11 +25,11 @@ if __name__ == "__main__":
 
     # 4. 导出 ONNX
     torch.onnx.export(
-        model, 
+        quantized_model, 
         input, 
         "Bilinear.onnx",   # 输出文件名
         export_params=True,   # 存储模型参数
-        opset_version=13,     # ONNX 版本
+        opset_version=20,     # ONNX 版本
         do_constant_folding=True,  # 进行常量折叠优化
         input_names=["input"],     # 输入名称
         output_names=["output"],   # 输出名称
