@@ -1,0 +1,5 @@
+/root/my-project/Dogs-vs-Cats/onnx2cpu/build/CMakeFiles/edit_cache.dir
+/root/my-project/Dogs-vs-Cats/onnx2cpu/build/CMakeFiles/rebuild_cache.dir
+/root/my-project/Dogs-vs-Cats/onnx2cpu/build/src/CMakeFiles/demo.dir
+/root/my-project/Dogs-vs-Cats/onnx2cpu/build/src/CMakeFiles/edit_cache.dir
+/root/my-project/Dogs-vs-Cats/onnx2cpu/build/src/CMakeFiles/rebuild_cache.dir

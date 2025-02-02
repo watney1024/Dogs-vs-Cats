@@ -1,1 +1,1 @@
-onnx-mlir --EmitONNXIR Bilinear.onnx
+onnx-mlir --EmitONNXIR custom_rot90.onnx
